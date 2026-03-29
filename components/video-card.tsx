@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { MoreVertical } from "lucide-react"
+import { MoreVertical, Lock, Crown } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -9,13 +9,18 @@ import Link from "next/link"
 interface VideoCardProps {
   video: any
   layout?: "grid" | "horizontal"
+  isPremium?: boolean
+  currentUser?: any
 }
 
-export function VideoCard({ video, layout = "grid" }: VideoCardProps) {
+export function VideoCard({ video, layout = "grid", isPremium = false, currentUser = null }: VideoCardProps) {
   const [isHovering, setIsHovering] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const hoverStartRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const stopTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  
+  // Check if content should be locked
+  const isLocked = !isPremium && currentUser?.id !== video.user_id
 
   useEffect(() => {
     const vid = videoRef.current
@@ -83,7 +88,7 @@ export function VideoCard({ video, layout = "grid" }: VideoCardProps) {
             <video
               ref={videoRef}
               src={video.file_path}
-              className="h-full w-full object-cover"
+              className={`h-full w-full object-cover ${isLocked ? 'blur-sm brightness-50' : ''}`}
               muted
               playsInline
               preload="metadata"
@@ -92,13 +97,23 @@ export function VideoCard({ video, layout = "grid" }: VideoCardProps) {
             <img
               src={video.thumbnail_path}
               alt={video.title}
-              className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+              className={`h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 ${isLocked ? 'blur-sm brightness-50' : ''}`}
             />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-purple-900 to-pink-600 flex items-center justify-center">
+            <div className={`h-full w-full bg-gradient-to-br from-purple-900 to-pink-600 flex items-center justify-center ${isLocked ? 'blur-sm brightness-50' : ''}`}>
               <span className="text-4xl">🎬</span>
             </div>
           )}
+          
+          {/* Premium Lock Overlay */}
+          {isLocked && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-purple-500/60 bg-black/70 backdrop-blur-sm">
+                <Lock className="h-4 w-4 text-purple-400" />
+              </div>
+            </div>
+          )}
+          
           {video.duration && video.duration !== '0:00' && (
             <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 py-0.5 text-xs font-medium text-white">
               {video.duration}
@@ -131,7 +146,7 @@ export function VideoCard({ video, layout = "grid" }: VideoCardProps) {
           <video
             ref={videoRef}
             src={video.file_path}
-            className="h-full w-full object-cover"
+            className={`h-full w-full object-cover ${isLocked ? 'blur-sm brightness-50' : ''}`}
             muted
             playsInline
             preload="metadata"
@@ -140,13 +155,27 @@ export function VideoCard({ video, layout = "grid" }: VideoCardProps) {
           <img
             src={video.thumbnail_path}
             alt={video.title}
-            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+            className={`h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 ${isLocked ? 'blur-sm brightness-50' : ''}`}
           />
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-purple-900 to-pink-600 flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+          <div className={`h-full w-full bg-gradient-to-br from-purple-900 to-pink-600 flex items-center justify-center transition-transform duration-200 group-hover:scale-105 ${isLocked ? 'blur-sm brightness-50' : ''}`}>
             <span className="text-6xl">🎬</span>
           </div>
         )}
+        
+        {/* Premium Lock Overlay */}
+        {isLocked && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-purple-500/60 bg-black/70 backdrop-blur-sm">
+              <Lock className="h-6 w-6 text-purple-400" />
+            </div>
+            <div className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-3 py-1 text-xs font-semibold text-white shadow-lg">
+              <Crown className="h-3 w-3" />
+              Premium
+            </div>
+          </div>
+        )}
+        
         {video.duration && video.duration !== '0:00' && (
           <span className="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-xs font-medium text-white">
             {video.duration}

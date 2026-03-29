@@ -32,6 +32,7 @@ export default function HomePage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalVideos, setTotalVideos] = useState(0)
+  const [isPremium, setIsPremium] = useState(false)
 
   const generateCaptcha = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -51,16 +52,39 @@ export default function HomePage() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setLoading(false)
+      if (session?.user) {
+        checkPremiumStatus(session.user.id)
+      }
     })
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      if (session?.user) {
+        checkPremiumStatus(session.user.id)
+      }
     })
 
     return () => subscription.unsubscribe()
   }, [])
+
+  const checkPremiumStatus = async (userId: string) => {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_premium, premium_expires_at')
+      .eq('id', userId)
+      .single()
+
+    if (profile?.is_premium) {
+      if (profile.premium_expires_at) {
+        const expiresAt = new Date(profile.premium_expires_at)
+        setIsPremium(expiresAt > new Date())
+      } else {
+        setIsPremium(true)
+      }
+    }
+  }
 
   useEffect(() => {
     if (user) {
@@ -431,7 +455,7 @@ export default function HomePage() {
               </div>
             ) : (
               <>
-                <VideoGrid videos={filteredVideos} />
+                <VideoGrid videos={filteredVideos} isPremium={isPremium} currentUser={user} />
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
