@@ -33,6 +33,7 @@ export function VideoPlayer({ video, isPremium = false, isPurchased = false, cur
   const [volume, setVolume] = useState(100)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [videoError, setVideoError] = useState(false)
 
   // Free users: show paywall overlay (do not play)
   const isBlocked = !isPremium && !isPurchased && (currentUser?.id !== video.user_id) && !video.is_free; // Admin check happens in parent usually, or we can add it here if profile is passed
@@ -50,12 +51,18 @@ export function VideoPlayer({ video, isPremium = false, isPurchased = false, cur
       setDuration(videoElement.duration)
     }
 
+    const handleError = () => {
+      setVideoError(true)
+    }
+
     videoElement.addEventListener('timeupdate', updateTime)
     videoElement.addEventListener('loadedmetadata', updateDuration)
+    videoElement.addEventListener('error', handleError)
 
     return () => {
       videoElement.removeEventListener('timeupdate', updateTime)
       videoElement.removeEventListener('loadedmetadata', updateDuration)
+      videoElement.removeEventListener('error', handleError)
     }
   }, [])
 
@@ -113,11 +120,18 @@ export function VideoPlayer({ video, isPremium = false, isPurchased = false, cur
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(isPlaying ? false : true)}
     >
+      {/* Fallback gradient background when video fails to load */}
+      {videoError && (
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900 to-pink-600 flex items-center justify-center">
+          <span className="text-8xl">🎬</span>
+        </div>
+      )}
+
       {/* Video element — always rendered for thumbnail */}
       <video
         ref={videoRef}
         src={video.file_path}
-        className={cn("h-full w-full max-w-full object-contain", isBlocked && "blur-sm brightness-50")}
+        className={cn("h-full w-full max-w-full object-contain", isBlocked && "blur-sm brightness-50", videoError && "hidden")}
         onClick={togglePlay}
         crossOrigin="anonymous"
       />
