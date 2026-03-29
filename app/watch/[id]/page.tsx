@@ -156,7 +156,7 @@ export default function WatchPage({ params }: WatchPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
         <div className="flex items-center h-14">
@@ -176,10 +176,10 @@ export default function WatchPage({ params }: WatchPageProps) {
       </div>
 
       {/* Main content */}
-      <main className="pt-14">
-        <div className="mx-auto grid max-w-[1800px] grid-cols-1 gap-6 p-6 xl:grid-cols-[1fr_400px]">
+      <main className="pt-14 w-full max-w-full overflow-x-hidden">
+        <div className="mx-auto grid max-w-[1800px] grid-cols-1 gap-6 p-4 sm:p-6 xl:grid-cols-[1fr_400px] w-full max-w-full">
           {/* Left column - Video and info */}
-          <div className="space-y-4">
+          <div className="space-y-4 w-full max-w-full overflow-hidden">
             <VideoPlayer 
               video={video} 
               isPremium={isPremium} 

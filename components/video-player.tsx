@@ -109,7 +109,7 @@ export function VideoPlayer({ video, isPremium = false, isPurchased = false, cur
 
   return (
     <div 
-      className="group relative aspect-video w-full overflow-hidden rounded-xl bg-black"
+      className="group relative aspect-video w-full max-w-full overflow-hidden rounded-xl bg-black"
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(isPlaying ? false : true)}
     >
@@ -117,7 +117,7 @@ export function VideoPlayer({ video, isPremium = false, isPurchased = false, cur
       <video
         ref={videoRef}
         src={video.file_path}
-        className={cn("h-full w-full object-contain", isBlocked && "blur-sm brightness-50")}
+        className={cn("h-full w-full max-w-full object-contain", isBlocked && "blur-sm brightness-50")}
         onClick={togglePlay}
         crossOrigin="anonymous"
       />
