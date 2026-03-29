@@ -48,6 +48,7 @@ export default function MegaCheckoutPage({ params }: CheckoutPageProps) {
   const [copied, setCopied] = useState(false)
   const [copiedPayment, setCopiedPayment] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<"crypto" | "cashapp" | "giftcard">("crypto")
+  const [giftCardProvider, setGiftCardProvider] = useState<string>("")
 
   const tierInfo = tierData[tier] || { name: "Unknown", price: 0, description: "" }
   
@@ -56,6 +57,34 @@ export default function MegaCheckoutPage({ params }: CheckoutPageProps) {
     btc: process.env.NEXT_PUBLIC_MEGA_BTC_ADDRESS || "your_btc_address_here",
     cashapp: process.env.NEXT_PUBLIC_MEGA_CASHAPP || "$YourCashApp",
     telegram: process.env.NEXT_PUBLIC_MEGA_TELEGRAM || "@YourTelegramUsername"
+  }
+
+  const getGiftCardLinks = (price: number) => {
+    // Use exact MEGA tier price
+    const cardValue = price
+    
+    return [
+      {
+        name: "Rewarble (G2A)",
+        label: `$${cardValue} Gift Card`,
+        url: `https://www.g2a.com/search?query=rewarble%20${cardValue}`
+      },
+      {
+        name: "Rewarble (Eneba)",
+        label: `$${cardValue} Gift Card`,
+        url: `https://www.eneba.com/store/all?text=rewarble%20${cardValue}&enb_campaign=Main%20Search&enb_content=search%20dropdown%20-%20input&enb_medium=input&enb_source=https%3A%2F%2Fwww.eneba.com%2F&enb_term=Submit`
+      },
+      {
+        name: "Rewarble (Driffle)",
+        label: `$${cardValue} Gift Card`,
+        url: `https://driffle.com/store?q=rewarble%20${cardValue}`
+      },
+      {
+        name: "Rewarble (Kinguin)",
+        label: `$${cardValue} Gift Card`,
+        url: `https://www.kinguin.net/listing?production_products_bestsellers_desc%5Bquery%5D=rewarble%20${cardValue}&production_products_bestsellers_desc%5Brange%5D%5Bprice%5D=0%3A2000&production_products_bestsellers_desc%5BrefinementList%5D%5Bactive%5D%5B0%5D=true`
+      }
+    ]
   }
 
   useEffect(() => {
@@ -82,6 +111,21 @@ export default function MegaCheckoutPage({ params }: CheckoutPageProps) {
     }
     
     setLoading(false)
+  }
+
+  const handleGiftCardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Only alphanumeric characters, max 22
+    let value = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
+    if (value.length > 22) value = value.slice(0, 22)
+    
+    // Format with dashes: XXXX-XXXX-XXXX-XXXX-XX
+    let formatted = ""
+    for (let i = 0; i < value.length; i++) {
+      if (i > 0 && i % 4 === 0) formatted += "-"
+      formatted += value[i]
+    }
+    
+    setTransactionId(formatted)
   }
 
   const handleSubmit = async () => {
@@ -124,6 +168,7 @@ export default function MegaCheckoutPage({ params }: CheckoutPageProps) {
         : process.env.NEXT_PUBLIC_MEGA_GIFTCARD_WEBHOOK
 
       const paymentMethodName = paymentMethod === 'crypto' ? 'BTC' : paymentMethod === 'cashapp' ? 'CashApp' : 'Gift Card'
+      const transactionLabel = paymentMethod === 'giftcard' ? 'Gift Card Code' : 'Transaction ID'
 
       if (webhookUrl) {
         await fetch(webhookUrl, {
@@ -134,7 +179,7 @@ export default function MegaCheckoutPage({ params }: CheckoutPageProps) {
               `**Tier:** ${tierInfo.name}\n` +
               `**Amount:** $${tierInfo.price}\n` +
               `**Payment:** ${paymentMethodName}\n` +
-              `**Transaction ID:** ${transactionId}\n` +
+              `**${transactionLabel}:** ${transactionId}\n` +
               `**User:** ${user!.email}\n` +
               `**Telegram:** @${telegramUsername || 'Not provided'}\n` +
               `**Order ID:** ${order.id}\n\n` +
@@ -335,33 +380,53 @@ export default function MegaCheckoutPage({ params }: CheckoutPageProps) {
                 {paymentMethod === "cashapp" && (
                   <div className="bg-secondary/50 border border-border rounded-lg p-4">
                     <h3 className="text-sm font-semibold mb-2">Send to CashApp:</h3>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 bg-background px-3 py-2 rounded text-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <code className="flex-1 bg-background px-3 py-2 rounded text-sm break-all">
                         {paymentInfo.cashapp}
                       </code>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => copyPaymentInfo(paymentInfo.cashapp)}
+                        className="shrink-0"
                       >
                         {copiedPayment ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                       </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">
+                    <p className="text-xs text-muted-foreground">
                       Amount: ${tierInfo.price}
                     </p>
                   </div>
                 )}
 
                 {paymentMethod === "giftcard" && (
-                  <div className="bg-secondary/50 border border-border rounded-lg p-4">
-                    <h3 className="text-sm font-semibold mb-2">Gift Card Instructions:</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Contact us on Telegram with your gift card details and order information.
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Amount: ${tierInfo.price}
-                    </p>
+                  <div className="space-y-4">
+                    <div className="bg-secondary/50 border border-border rounded-lg p-4">
+                      <h3 className="text-sm font-semibold mb-3">Purchase Gift Card:</h3>
+                      <div className="space-y-2">
+                        {getGiftCardLinks(tierInfo.price).map((link) => (
+                          <a
+                            key={link.name}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between p-3 bg-background hover:bg-accent rounded-lg transition-colors group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Gift className="h-5 w-5 text-purple-500" />
+                              <div>
+                                <p className="text-sm font-medium">{link.name}</p>
+                                <p className="text-xs text-muted-foreground">{link.label}</p>
+                              </div>
+                            </div>
+                            <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                          </a>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-3">
+                        After purchasing, enter the gift card code below
+                      </p>
+                    </div>
                   </div>
                 )}
 
@@ -371,10 +436,17 @@ export default function MegaCheckoutPage({ params }: CheckoutPageProps) {
                     {paymentMethod === "giftcard" ? "Gift Card Code" : "Transaction ID / Receipt"}
                   </label>
                   <Input
-                    placeholder={paymentMethod === "giftcard" ? "Enter gift card code" : "Enter transaction ID or receipt number"}
+                    placeholder={paymentMethod === "giftcard" ? "XXXX-XXXX-XXXX-XXXX-XX" : "Enter transaction ID or receipt number"}
                     value={transactionId}
-                    onChange={(e) => setTransactionId(e.target.value)}
+                    onChange={paymentMethod === "giftcard" ? handleGiftCardChange : (e) => setTransactionId(e.target.value)}
+                    maxLength={paymentMethod === "giftcard" ? 26 : undefined}
+                    className={paymentMethod === "giftcard" ? "font-mono uppercase tracking-wider" : ""}
                   />
+                  {paymentMethod === "giftcard" && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {transactionId.replace(/-/g, "").length}/22 characters
+                    </p>
+                  )}
                 </div>
 
                 {/* Proof Image URL */}
