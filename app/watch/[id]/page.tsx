@@ -159,13 +159,13 @@ export default function WatchPage({ params }: WatchPageProps) {
     <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
-        <div className="flex items-center h-14">
-          <Link href="/" className="ml-4">
+        <div className="flex items-center h-14 px-2 sm:px-0">
+          <Link href="/" className="ml-2 sm:ml-4">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <div className="flex-1 -ml-12">
+          <div className="flex-1 -ml-8 sm:-ml-12">
             <Header
               onMenuClick={() => {}}
               searchQuery={searchQuery}
@@ -176,7 +176,7 @@ export default function WatchPage({ params }: WatchPageProps) {
       </div>
 
       {/* Main content */}
-      <main className="pt-14 w-full max-w-full overflow-x-hidden">
+      <main className="pt-16 sm:pt-14 w-full max-w-full overflow-x-hidden">
         <div className="mx-auto grid max-w-[1800px] grid-cols-1 gap-6 p-4 sm:p-6 xl:grid-cols-[1fr_400px] w-full max-w-full">
           {/* Left column - Video and info */}
           <div className="space-y-4 w-full max-w-full overflow-hidden">
