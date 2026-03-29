@@ -119,6 +119,7 @@ export function VideoPlayer({ video, isPremium = false, isPurchased = false, cur
         src={video.file_path}
         className={cn("h-full w-full object-contain", isBlocked && "blur-sm brightness-50")}
         onClick={togglePlay}
+        crossOrigin="anonymous"
       />
 
       {/* ── PAYWALL OVERLAY (free users) ── */}

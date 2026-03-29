@@ -92,6 +92,7 @@ export function VideoCard({ video, layout = "grid", isPremium = false, currentUs
               muted
               playsInline
               preload="metadata"
+              crossOrigin="anonymous"
             />
           ) : video.thumbnail_path ? (
             <img
@@ -136,12 +137,12 @@ export function VideoCard({ video, layout = "grid", isPremium = false, currentUs
   return (
     <Link 
       href={`/watch/${video.id}`} 
-      className="group flex flex-col gap-3"
+      className="group flex flex-col gap-3 w-full max-w-full"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
       {/* Thumbnail */}
-      <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-secondary">
+      <div className="relative aspect-video w-full max-w-full overflow-hidden rounded-xl bg-secondary">
         {video.file_path ? (
           <video
             ref={videoRef}
@@ -150,6 +151,7 @@ export function VideoCard({ video, layout = "grid", isPremium = false, currentUs
             muted
             playsInline
             preload="metadata"
+            crossOrigin="anonymous"
           />
         ) : video.thumbnail_path ? (
           <img

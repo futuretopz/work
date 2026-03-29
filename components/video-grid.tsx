@@ -23,7 +23,7 @@ export function VideoGrid({ videos, isPremium = false, currentUser = null }: Vid
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full max-w-full overflow-hidden">
       {videos.map((video) => (
         <VideoCard key={video.id} video={video} isPremium={isPremium} currentUser={currentUser} />
       ))}

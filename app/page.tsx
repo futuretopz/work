@@ -440,7 +440,7 @@ export default function HomePage() {
       <div className="flex flex-1 pt-14">
         <Sidebar isOpen={isSidebarOpen} />
         
-        <main className="flex-1 lg:ml-60">
+        <main className="flex-1 lg:ml-60 w-full max-w-full overflow-x-hidden">
           <div className="sticky top-14 z-30 border-b border-border bg-background px-4 py-3">
             <CategoryChips
               selectedCategory={selectedCategory}
@@ -448,7 +448,7 @@ export default function HomePage() {
             />
           </div>
           
-          <div className="p-6">
+          <div className="p-6 max-w-full overflow-hidden">
             {videosLoading ? (
               <div className="flex justify-center items-center py-20">
                 <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
