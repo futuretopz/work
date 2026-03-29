@@ -7,7 +7,7 @@ import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Loader2, ArrowLeft, Check, Copy, ExternalLink } from "lucide-react"
+import { Loader2, ArrowLeft, Check, Copy, ExternalLink, Bitcoin, DollarSign, Gift } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -47,12 +47,14 @@ export default function MegaCheckoutPage({ params }: CheckoutPageProps) {
   const [telegramUsername, setTelegramUsername] = useState("")
   const [copied, setCopied] = useState(false)
   const [copiedPayment, setCopiedPayment] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState<"crypto" | "cashapp" | "giftcard">("crypto")
 
   const tierInfo = tierData[tier] || { name: "Unknown", price: 0, description: "" }
   
   // Payment info from env
   const paymentInfo = {
     btc: process.env.NEXT_PUBLIC_MEGA_BTC_ADDRESS || "your_btc_address_here",
+    cashapp: process.env.NEXT_PUBLIC_MEGA_CASHAPP || "$YourCashApp",
     telegram: process.env.NEXT_PUBLIC_MEGA_TELEGRAM || "@YourTelegramUsername"
   }
 
@@ -99,7 +101,7 @@ export default function MegaCheckoutPage({ params }: CheckoutPageProps) {
           tier: tier,
           tier_name: tierInfo.name,
           amount: tierInfo.price,
-          payment_method: 'crypto',
+          payment_method: paymentMethod,
           transaction_id: transactionId,
           proof_image: proofImage || null,
           notes: notes || null,
@@ -115,7 +117,13 @@ export default function MegaCheckoutPage({ params }: CheckoutPageProps) {
       setOrderCreated(true)
 
       // Send webhook notification
-      const webhookUrl = process.env.NEXT_PUBLIC_MEGA_CRYPTO_WEBHOOK
+      const webhookUrl = paymentMethod === 'crypto' 
+        ? process.env.NEXT_PUBLIC_MEGA_CRYPTO_WEBHOOK
+        : paymentMethod === 'cashapp'
+        ? process.env.NEXT_PUBLIC_MEGA_CASHAPP_WEBHOOK
+        : process.env.NEXT_PUBLIC_MEGA_GIFTCARD_WEBHOOK
+
+      const paymentMethodName = paymentMethod === 'crypto' ? 'BTC' : paymentMethod === 'cashapp' ? 'CashApp' : 'Gift Card'
 
       if (webhookUrl) {
         await fetch(webhookUrl, {
@@ -125,7 +133,7 @@ export default function MegaCheckoutPage({ params }: CheckoutPageProps) {
             content: `🛒 **New MEGA Order**\n\n` +
               `**Tier:** ${tierInfo.name}\n` +
               `**Amount:** $${tierInfo.price}\n` +
-              `**Payment:** BTC\n` +
+              `**Payment:** ${paymentMethodName}\n` +
               `**Transaction ID:** ${transactionId}\n` +
               `**User:** ${user!.email}\n` +
               `**Telegram:** @${telegramUsername || 'Not provided'}\n` +
@@ -271,43 +279,99 @@ export default function MegaCheckoutPage({ params }: CheckoutPageProps) {
               <h2 className="text-xl font-bold mb-4">Payment Details</h2>
               
               <div className="space-y-4">
-                {/* Payment Method - Only Crypto */}
+                {/* Payment Method Selection */}
                 <div>
                   <label className="text-sm font-medium mb-2 block">Payment Method</label>
-                  <Button
-                    variant="default"
-                    className="w-full bg-purple-600 hover:bg-purple-700"
-                    disabled
-                  >
-                    Bitcoin (BTC)
-                  </Button>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      variant={paymentMethod === "crypto" ? "default" : "outline"}
+                      className={paymentMethod === "crypto" ? "bg-purple-600 hover:bg-purple-700" : ""}
+                      onClick={() => setPaymentMethod("crypto")}
+                    >
+                      <Bitcoin className="h-4 w-4 mr-2" />
+                      BTC
+                    </Button>
+                    <Button
+                      variant={paymentMethod === "cashapp" ? "default" : "outline"}
+                      className={paymentMethod === "cashapp" ? "bg-purple-600 hover:bg-purple-700" : ""}
+                      onClick={() => setPaymentMethod("cashapp")}
+                    >
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      CashApp
+                    </Button>
+                    <Button
+                      variant={paymentMethod === "giftcard" ? "default" : "outline"}
+                      className={paymentMethod === "giftcard" ? "bg-purple-600 hover:bg-purple-700" : ""}
+                      onClick={() => setPaymentMethod("giftcard")}
+                    >
+                      <Gift className="h-4 w-4 mr-2" />
+                      Gift Card
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Payment Information */}
-                <div className="bg-secondary/50 border border-border rounded-lg p-4">
-                  <h3 className="text-sm font-semibold mb-2">Send BTC to:</h3>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 bg-background px-3 py-2 rounded text-sm break-all">
-                      {paymentInfo.btc}
-                    </code>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => copyPaymentInfo(paymentInfo.btc)}
-                    >
-                      {copiedPayment ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    </Button>
+                {paymentMethod === "crypto" && (
+                  <div className="bg-secondary/50 border border-border rounded-lg p-4">
+                    <h3 className="text-sm font-semibold mb-2">Send BTC to:</h3>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 bg-background px-3 py-2 rounded text-sm break-all">
+                        {paymentInfo.btc}
+                      </code>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyPaymentInfo(paymentInfo.btc)}
+                      >
+                        {copiedPayment ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Amount: ${tierInfo.price}
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Amount: ${tierInfo.price}
-                  </p>
-                </div>
+                )}
+
+                {paymentMethod === "cashapp" && (
+                  <div className="bg-secondary/50 border border-border rounded-lg p-4">
+                    <h3 className="text-sm font-semibold mb-2">Send to CashApp:</h3>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 bg-background px-3 py-2 rounded text-sm">
+                        {paymentInfo.cashapp}
+                      </code>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyPaymentInfo(paymentInfo.cashapp)}
+                      >
+                        {copiedPayment ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Amount: ${tierInfo.price}
+                    </p>
+                  </div>
+                )}
+
+                {paymentMethod === "giftcard" && (
+                  <div className="bg-secondary/50 border border-border rounded-lg p-4">
+                    <h3 className="text-sm font-semibold mb-2">Gift Card Instructions:</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Contact us on Telegram with your gift card details and order information.
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Amount: ${tierInfo.price}
+                    </p>
+                  </div>
+                )}
 
                 {/* Transaction ID */}
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Transaction ID / Receipt</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    {paymentMethod === "giftcard" ? "Gift Card Code" : "Transaction ID / Receipt"}
+                  </label>
                   <Input
-                    placeholder="Enter transaction ID or receipt number"
+                    placeholder={paymentMethod === "giftcard" ? "Enter gift card code" : "Enter transaction ID or receipt number"}
                     value={transactionId}
                     onChange={(e) => setTransactionId(e.target.value)}
                   />
